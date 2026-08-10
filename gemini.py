@@ -82,6 +82,7 @@ st.markdown("""
 <style>
     .main-header { font-size: 2.2rem; color: #1E3A8A; font-weight: 800; text-align: center; margin-bottom: 5px; }
     .sub-header { font-size: 1.1rem; color: #4B5563; text-align: center; margin-bottom: 25px; }
+    .rights-footer { font-size: 0.7rem; color: #9CA3AF; text-align: center; font-style: italic; margin-top: 0px; margin-bottom: 25px; }
     .section-banner {
         background: linear-gradient(90deg, #1E3A8A 0%, #3B82F6 100%);
         color: white; padding: 12px 20px; border-radius: 8px; font-weight: bold; font-size: 1.2rem; margin: 20px 0 15px 0;
@@ -108,7 +109,7 @@ st.markdown("""
 
 st.markdown('<div class="main-header">📊 TOOL DI PIANIFICAZIONE FISCALE E CONVENIENZA CPB</div>', unsafe_allow_html=True)
 st.markdown('<div class="sub-header">Realizzato da <b>Giacomo Bertè</b> | Analisi Triennale e Simulazione Avanzata</div>', unsafe_allow_html=True)
-
+st.markdown('<div class="rights-footer">tutti i diritti riservati</div>', unsafe_allow_html=True)
 # -----------------------------------------------------------------------------
 # PARSER TELEMATICO (.TXT)
 # -----------------------------------------------------------------------------
@@ -410,11 +411,11 @@ if 'pdf_dati_memorizzati' not in st.session_state:
 infrannuali_values = {}
 if forecast_method == "Proiezione Annualizzata (Prospetto Fiscale AGO Infinity)":
     st.markdown('<div class="proiezione-box">', unsafe_allow_html=True)
-    st.markdown(f"#### 📐 Proiezione da REDDITO/PERDITA del Prospetto Fiscale {year_cpb1}")
+    st.markdown(f"#### 📐 Proiezione REDDITO/PERDITA da Prospetto Fiscale Zucchetti {year_cpb1}")
     
     col_pdf1, col_pdf2 = st.columns([2, 2])
     with col_pdf1:
-        months_passed = st.slider("Mesi di bilancio già maturati/contabilizzati:", 1, 11, 6, help="Es. 6 per bilancio chiuso al 30/06")
+        months_passed = st.slider("Mesi di bilancio già maturati/contabilizzati:", 1, 11, 6, help="Esempio: indicare 6 per contabilità registrata al 30/06")
     with col_pdf2:
         pdf_zucchetti = st.file_uploader("📂 Carica Prospetto Fiscale PDF Zucchetti:", type=["pdf"])
     
@@ -537,15 +538,10 @@ st.markdown(f"""
 """, unsafe_allow_html=True)
 
 def calculate_irpef_scaglioni(reddito_totale):
-    """
-    Calcola l'IRPEF lorda, l'aliquota media e il dettaglio passaggio per passaggio sui 3 scaglioni.
-    """
     if reddito_totale <= 0:
         return 0.0, 0.0, []
     
     dettaglio = []
-    
-    # 1° Scaglione: 0 - 28.000 € (23%)
     quota1 = min(reddito_totale, 28000.0)
     imposta1 = quota1 * 0.23
     dettaglio.append({
@@ -557,7 +553,6 @@ def calculate_irpef_scaglioni(reddito_totale):
     
     imposta_totale = imposta1
     
-    # 2° Scaglione: 28.000 - 50.000 € (35%)
     if reddito_totale > 28000.0:
         quota2 = min(reddito_totale - 28000.0, 22000.0)
         imposta2 = quota2 * 0.35
@@ -569,7 +564,6 @@ def calculate_irpef_scaglioni(reddito_totale):
             'imposta': imposta2
         })
         
-    # 3° Scaglione: Oltre 50.000 € (43%)
     if reddito_totale > 50000.0:
         quota3 = reddito_totale - 50000.0
         imposta3 = quota3 * 0.43
@@ -584,13 +578,12 @@ def calculate_irpef_scaglioni(reddito_totale):
     aliquota_media = (imposta_totale / reddito_totale) * 100.0
     return imposta_totale, aliquota_media, dettaglio
 
-# Variabili di stato per i dettagli soci/titolare da passare al PDF
 st.session_state['dettaglio_irpef_pdf'] = []
 
 # -----------------------------------------------------------------------------
 # CONFIGURAZIONE SOGGETTO E TASSAZIONE FISCALE
 # -----------------------------------------------------------------------------
-st.markdown('<div class="section-banner"><span>🏛️</span> CONFIGURAZIONE SOGGETTO E TASSAZIONE FISCALE</div>', unsafe_allow_html=True)
+st.markdown('<div class="section-banner"><span>🏛️</span> CONFIGURAZIONE TASSAZIONE FISCALE PER CALCOLO ALIQUOTA MEDIA </div>', unsafe_allow_html=True)
 
 col_tax1, col_tax2 = st.columns([2, 2])
 
@@ -615,15 +608,13 @@ with col_tax1:
         * **15%**: per un punteggio ISA inferiore a **6.0**
         """)
 
-# --- CALCOLO IRPEF DISTINTO SULLE DUE ANNUALITÀ ---
 with col_tax2:
     irap_rate = st.number_input("Aliquota IRAP (%):", value=0.0, step=0.1, help="Lascia 0.0% per Ditte Ind./Professionisti esenti o se non considerata nel calcolo Flat Tax CPB")
 
-    # --- AVVISO VISIVO (WARNING / DISCLAIMER) IN EVIDENZA ---
     st.warning(
         "⚠️ **Nota metodologica:** Il calcolo dell'IRPEF e dell'aliquota media si basa sul reddito complessivo "
-        "applicando la progressione per scaglioni vigenti, maggiorata delle addizionali regionali e comunali specificate analiticamente in modo distinto per ciascuna annualità, "
-        "ma al lordo delle detrazioni d'imposta (es. carichi di famiglia, oneri detraibili ex art. 15 TUIR)."
+        "applicando la progressione per scaglioni vigenti, maggiorata delle addizionali regionali e comunali specificate analiticamente in modo distinto per ciascuna annualità. "
+        "NB. Le detrazioni d'imposta (es. carichi di famiglia, oneri detraibili ex art. 15 TUIR) non vengono definite."
     )
     
     dettaglio_irpef_struttura = []
@@ -646,11 +637,11 @@ with col_tax2:
                     col_add1, col_add2 = st.columns(2)
                     with col_add1:
                         st.markdown(f"**Anno {year_cpb1}**")
-                        add_reg_socio_t1 = st.number_input(f"Add. Regionale {year_cpb1} (%)", min_value=0.0, max_value=3.0, value=1.23, step=0.01, key=f"add_reg_sdc_t1_{s}")
+                        add_reg_socio_t1 = st.number_input(f"Add. Regionale {year_cpb1} (%)", min_value=0.0, max_value=100.0, value=1.23, step=0.01, key=f"add_reg_sdc_t1_{s}")
                         add_com_socio_t1 = st.number_input(f"Add. Comunale {year_cpb1} (%)", value=0.80, step=0.01, key=f"add_com_sdc_t1_{s}")
                     with col_add2:
                         st.markdown(f"**Anno {year_cpb2}**")
-                        add_reg_socio_t2 = st.number_input(f"Add. Regionale {year_cpb2} (%)", min_value=0.0, max_value=3.0, value=1.23, step=0.01, key=f"add_reg_sdc_t2_{s}")
+                        add_reg_socio_t2 = st.number_input(f"Add. Regionale {year_cpb2} (%)", min_value=0.0, max_value=100.0, value=1.23, step=0.01, key=f"add_reg_sdc_t2_{s}")
                         add_com_socio_t2 = st.number_input(f"Add. Comunale {year_cpb2} (%)", value=0.80, step=0.01, key=f"add_com_sdc_t2_{s}")
                     
                     tot_add_socio_t1 = add_reg_socio_t1 + add_com_socio_t1
@@ -664,14 +655,12 @@ with col_tax2:
                         r_altri_t2 = st.number_input(f"Altri Redditi {year_cpb2} (€)", value=0.0, step=1000.0, key=f"ra_sdc_t2_{s}")
                         ded_socio_t2 = st.number_input(f"Deduzioni Personali {year_cpb2} (€)", value=0.0, step=500.0, key=f"ded_sdc_t2_{s}")
                     
-                    # Calcolo Anno T1
                     r_impr_socio_t1 = target_pred_income_t1 * (q / 100.0)
                     r_tot_socio_t1 = max(0.0, r_altri_t1 + r_impr_socio_t1 - ded_socio_t1)
                     imp_socio_base_t1, al_socio_base_t1, dettaglio_scaglioni_socio_t1 = calculate_irpef_scaglioni(r_tot_socio_t1)
                     al_socio_t1 = al_socio_base_t1 + tot_add_socio_t1
                     imp_socio_t1 = imp_socio_base_t1 + (r_tot_socio_t1 * (tot_add_socio_t1 / 100.0))
                     
-                    # Calcolo Anno T2
                     r_impr_socio_t2 = target_pred_income_t2 * (q / 100.0)
                     r_tot_socio_t2 = max(0.0, r_altri_t2 + r_impr_socio_t2 - ded_socio_t2)
                     imp_socio_base_t2, al_socio_base_t2, dettaglio_scaglioni_socio_t2 = calculate_irpef_scaglioni(r_tot_socio_t2)
@@ -752,11 +741,11 @@ with col_tax2:
                 col_add1, col_add2 = st.columns(2)
                 with col_add1:
                     st.markdown(f"**Anno {year_cpb1}**")
-                    add_reg_socio_t1 = st.number_input(f"Add. Regionale {year_cpb1} (%)", min_value=0.0, max_value=3.0, value=1.23, step=0.01, key=f"add_reg_sdp_t1_{s}")
+                    add_reg_socio_t1 = st.number_input(f"Add. Regionale {year_cpb1} (%)", min_value=0.0, max_value=100.0, value=1.23, step=0.01, key=f"add_reg_sdp_t1_{s}")
                     add_com_socio_t1 = st.number_input(f"Add. Comunale {year_cpb1} (%)", value=0.80, step=0.01, key=f"add_com_sdp_t1_{s}")
                 with col_add2:
                     st.markdown(f"**Anno {year_cpb2}**")
-                    add_reg_socio_t2 = st.number_input(f"Add. Regionale {year_cpb2} (%)", min_value=0.0, max_value=3.0, value=1.23, step=0.01, key=f"add_reg_sdp_t2_{s}")
+                    add_reg_socio_t2 = st.number_input(f"Add. Regionale {year_cpb2} (%)", min_value=0.0, max_value=100.0, value=1.23, step=0.01, key=f"add_reg_sdp_t2_{s}")
                     add_com_socio_t2 = st.number_input(f"Add. Comunale {year_cpb2} (%)", value=0.80, step=0.01, key=f"add_com_sdp_t2_{s}")
                 
                 tot_add_socio_t1 = add_reg_socio_t1 + add_com_socio_t1
@@ -770,14 +759,12 @@ with col_tax2:
                     r_altri_t2 = st.number_input(f"Altri Redditi {year_cpb2} (€)", value=0.0, step=1000.0, key=f"ra_t2_{s}")
                     ded_socio_t2 = st.number_input(f"Deduzioni Personali {year_cpb2} (€)", value=0.0, step=500.0, key=f"ded_t2_{s}")
                 
-                # Calcolo Anno T1
                 r_impr_socio_t1 = target_pred_income_t1 * (q / 100.0)
                 r_tot_socio_t1 = max(0.0, r_altri_t1 + r_impr_socio_t1 - ded_socio_t1)
                 imp_socio_base_t1, al_socio_base_t1, dettaglio_scaglioni_socio_t1 = calculate_irpef_scaglioni(r_tot_socio_t1)
                 al_socio_t1 = al_socio_base_t1 + tot_add_socio_t1
                 imp_socio_t1 = imp_socio_base_t1 + (r_tot_socio_t1 * (tot_add_socio_t1 / 100.0))
                 
-                # Calcolo Anno T2
                 r_impr_socio_t2 = target_pred_income_t2 * (q / 100.0)
                 r_tot_socio_t2 = max(0.0, r_altri_t2 + r_impr_socio_t2 - ded_socio_t2)
                 imp_socio_base_t2, al_socio_base_t2, dettaglio_scaglioni_socio_t2 = calculate_irpef_scaglioni(r_tot_socio_t2)
@@ -843,11 +830,11 @@ with col_tax2:
             col_add1, col_add2 = st.columns(2)
             with col_add1:
                 st.markdown(f"**Anno {year_cpb1}**")
-                add_reg_tit_t1 = st.number_input(f"Add. Regionale {year_cpb1} (%)", min_value=0.0, max_value=3.0, value=1.23, step=0.01, key="add_reg_tit_t1")
+                add_reg_tit_t1 = st.number_input(f"Add. Regionale {year_cpb1} (%)", min_value=0.0, max_value=100.0, value=1.23, step=0.01, key="add_reg_tit_t1")
                 add_com_tit_t1 = st.number_input(f"Add. Comunale {year_cpb1} (%)", value=0.80, step=0.01, key="add_com_tit_t1")
             with col_add2:
                 st.markdown(f"**Anno {year_cpb2}**")
-                add_reg_tit_t2 = st.number_input(f"Add. Regionale {year_cpb2} (%)", min_value=0.0, max_value=3.0, value=1.23, step=0.01, key="add_reg_tit_t2")
+                add_reg_tit_t2 = st.number_input(f"Add. Regionale {year_cpb2} (%)", min_value=0.0, max_value=100.0, value=1.23, step=0.01, key="add_reg_tit_t2")
                 add_com_tit_t2 = st.number_input(f"Add. Comunale {year_cpb2} (%)", value=0.80, step=0.01, key="add_com_tit_t2")
             
             tot_add_tit_t1 = add_reg_tit_t1 + add_com_tit_t1
@@ -861,13 +848,11 @@ with col_tax2:
                 altri_redditi_ditta_t2 = st.number_input(f"Altri Redditi {year_cpb2} (€):", value=0.0, step=1000.0, key="altri_r_ditta_t2")
                 deduzioni_t2 = st.number_input(f"Deduzioni/Oneri Deducibili {year_cpb2} (€):", value=0.0, step=500.0, key="ded_ditta_t2")
             
-            # Anno T1
             reddito_totale_ditta_t1 = max(0.0, target_pred_income_t1 + altri_redditi_ditta_t1 - deduzioni_t1)
             imp_ditta_base_t1, irpef_base_ditta_t1, dettaglio_scaglioni_t1 = calculate_irpef_scaglioni(reddito_totale_ditta_t1)
             irpef_ditta_t1 = irpef_base_ditta_t1 + tot_add_tit_t1
             imp_ditta_t1 = imp_ditta_base_t1 + (reddito_totale_ditta_t1 * (tot_add_tit_t1 / 100.0))
             
-            # Anno T2
             reddito_totale_ditta_t2 = max(0.0, target_pred_income_t2 + altri_redditi_ditta_t2 - deduzioni_t2)
             imp_ditta_base_t2, irpef_base_ditta_t2, dettaglio_scaglioni_t2 = calculate_irpef_scaglioni(reddito_totale_ditta_t2)
             irpef_ditta_t2 = irpef_base_ditta_t2 + tot_add_tit_t2
@@ -917,9 +902,36 @@ with col_tax2:
 st.session_state['dettaglio_irpef_pdf'] = dettaglio_irpef_struttura
 
 # -----------------------------------------------------------------------------
-# INPUT CPB BIENNALE & CONVENIENZA
+# INPUT CPB BIENNALE & CONVENIENZA (CON MODIFICA REDDITO STORICO BASE)
 # -----------------------------------------------------------------------------
 st.markdown('<div class="section-banner"><span>📅</span> INSERIMENTO DATI CPB SULLE 2 ANNUALITÀ (CPB)</div>', unsafe_allow_html=True)
+
+# Recupero del reddito storico base grezzo dall'ultima dichiarazione importata
+raw_base_hist = parsed_data[-1][target_key]
+
+st.markdown("### 🔧 Rettifica Reddito Storico Base (Reddito rilevante ai fini del CPB)")
+st.markdown(f"Valore originario rilevato dall'ultima dichiarazione: **€ {raw_base_hist:,.2f}**")
+
+col_rett1, col_rett2 = st.columns(2)
+with col_rett1:
+    comp_pos_art86_87_88 = st.number_input(
+        "**COMPONENTI POSITIVI DA RETTIFICARE - ART 86/87/88 TUIR**:",
+        value=0.0,
+        step=100.0,
+        help="Inserisci i componenti positivi da rettificare ai sensi degli articoli 86, 87 e 88 del TUIR (plusvalenze, sopravvenienze attive, utili distribuiti, redditi da partecipazione; oppure componenti da rettificare manualmente)."
+    )
+with col_rett2:
+    comp_neg_art101 = st.number_input(
+        "**COMPONENTI NEGATIVI DA RETTIFICARE - ART 101 TUIR**:",
+        value=0.0,
+        step=100.0,
+        help="Inserisci i componenti negativi da rettificare ai sensi dell'articolo 101 del TUIR (minusvalenze, sopravvenienze passive, perdite su crediti, perdite da partecipazione, maggior costo del lavoro, maggior deduzione dipendenti 20% / 30%, maggior ammortamento e leasing – L. 199/2025; oppure componenti da rettificare manualmente)."
+    )
+
+# Calcolo del reddito storico base effettivo post-variazioni richiesto
+base_hist_2025 = raw_base_hist - comp_pos_art86_87_88 + comp_neg_art101
+
+st.info(f"📌 **Reddito Storico Base effettivo considerato per i calcoli CPB:** € {raw_base_hist:,.2f} - € {comp_pos_art86_87_88:,.2f} + € {comp_neg_art101:,.2f} = **€ {base_hist_2025:,.2f}**")
 
 col_cpb_y1, col_cpb_y2 = st.columns(2)
 
@@ -936,9 +948,9 @@ with col_cpb_y2:
 # -----------------------------------------------------------------------------
 # BREAK-EVEN POINT & RISULTATO FINALE (DETTAGLIATO E SUDDIVISO PER ANNO)
 # -----------------------------------------------------------------------------
-st.markdown('<div class="section-banner"><span>🧮</span> ANALISI DETTAGLIATA E BREAK-EVEN POINT PASSAGGIO DOPO PASSAGGIO</div>', unsafe_allow_html=True)
+st.markdown('<div class="section-banner"><span>🧮</span> ANALISI CALCOLO DI CONVENIENZA E BREAK-EVEN POINT </div>', unsafe_allow_html=True)
 
-with st.expander("❓ **Come viene calcolata la convenienza e cos'è il Reddito Soglia? (Clicca per leggere)**", expanded=False):
+with st.expander("❓ **Come viene calcolata la convenienza fiscale e cos'è il Reddito Soglia? (Clicca per leggere)**", expanded=False):
     st.markdown("""
     ### 🎈 Cos'è il Concordato Preventivo Biennale (CPB)?
     Il Concordato Preventivo Biennale è uno strumento con cui l'Agenzia delle Entrate propone al contribuente un reddito concordato valido per due anni. Se il contribuente aderisce, accetta di determinare le imposte dirette su quel reddito concordato, indipendentemente dal reddito effettivamente conseguito, salvo i casi di decadenza o cessazione previsti dalla normativa.
@@ -946,16 +958,16 @@ with st.expander("❓ **Come viene calcolata la convenienza e cos'è il Reddito 
     ---
     
     ### 1️⃣ Come calcoliamo le tasse con il Concordato?
-    * **Parte Base (Storica):** Paghi le tue tasse normali (es. IRPEF/IRES + IRAP + Addizionali Locali) sul reddito concordato fino al livello storico.
-    * **Parte Extra (Maggiorazione):** Se la proposta dello Stato è più alta del tuo reddito passato, sull'aumento paghi una **Flat Tax super scontata** (10%, 12% o 15% in base al punteggio ISA).
+    * **Parte Base (Storica):** Paghi le tasse normali (es. IRPEF/IRES + IRAP + Addizionali Locali) sul reddito concordato fino al livello storico.
+    * **Parte Extra (Maggiorazione):** Se la proposta dello Stato è più alta del tuo reddito passato, sull'aumento paghi una **Flat Tax scontata** (10%, 12% o 15% in base al punteggio ISA).
     
     ---
     
     ### 2️⃣ Cos'è il "Reddito Soglia" (Break-Even Point)?
-    È il reddito di pareggio. Sono i componenti positivi esatti oltre i quali il Concordato inizia a farti **risparmiare soldi**.
-    *  Reddito effettivo atteso = Reddito Bep -> i due regimi si equivalgono
-    *  Reddito effettivo atteso < Reddito Bep -> regime ordinario
-    *  Reddito effettivo atteso > Reddito Bep -> regime CPB
+    È il reddito di pareggio, ossia il livello di componenti positivi di reddito oltre il quale **aderire al Concordato Preventivo Biennale risulta fiscalmente conveniente rispetto alla tassazione ordinaria**.
+    * Reddito effettivo atteso = Reddito Bep -> i due regimi si equivalgono
+    * Reddito effettivo atteso < Reddito Bep -> regime ordinario
+    * Reddito effettivo atteso > Reddito Bep -> regime CPB
     
     $$\\text{Reddito Soglia} = \\frac{\\text{Tasse Totali con il CPB}}{\\text{Tua Aliquota di Tasse Ordinaria}}$$
     """)
@@ -984,8 +996,6 @@ def calc_annual_taxes_detailed(income_atteso, prop_cpb, tax_rate_std, flat_tax_r
         'savings': savings,
         'bep': bep
     }
-
-base_hist_2025 = parsed_data[-1][target_key]
 
 res_y1 = calc_annual_taxes_detailed(exp_income_y1, cpb_proposal_y1, total_tax_rate_y1, substitute_rate, base_hist_2025)
 res_y2 = calc_annual_taxes_detailed(exp_income_y2, cpb_proposal_y2, total_tax_rate_y2, substitute_rate, base_hist_2025)
@@ -1017,7 +1027,7 @@ else:
             <b>2️⃣ REGIME CONCORDATO PREVENTIVO BIENNALE (Con CPB)</b><br>
             • Quota Base ({total_tax_rate_y1:.2f}% su € {res_y1['base_ordinaria_cpb']:,.2f}):<br>
             &nbsp;&nbsp;&nbsp;&nbsp;€ {res_y1['base_ordinaria_cpb']:,.2f} × {total_tax_rate_y1:.2f}% = <b>€ {res_y1['tax_cpb_base']:,.2f}</b><br>
-            • Quota Incrementale Flat Tax ({substitute_rate}% su € {res_y1['incremento_cpb']:,.2f}):<br>
+            • Quota Incrementale Flat Tax (Reddito CPB - Reddito Base):<br>
             &nbsp;&nbsp;&nbsp;&nbsp;€ {res_y1['incremento_cpb']:,.2f} × {substitute_rate}% = <b>€ {res_y1['tax_cpb_flat']:,.2f}</b><br>
             • <b>Totale Tasse CPB {year_cpb1}:</b> € {res_y1['tax_cpb_base']:,.2f} + € {res_y1['tax_cpb_flat']:,.2f} = <b>€ {res_y1['tax_cpb_total']:,.2f}</b>
             <hr style="margin:8px 0;">
@@ -1040,7 +1050,7 @@ else:
             <b>2️⃣ REGIME CONCORDATO PREVENTIVO BIENNALE (Con CPB)</b><br>
             • Quota Base ({total_tax_rate_y2:.2f}% su € {res_y2['base_ordinaria_cpb']:,.2f}):<br>
             &nbsp;&nbsp;&nbsp;&nbsp;€ {res_y2['base_ordinaria_cpb']:,.2f} × {total_tax_rate_y2:.2f}% = <b>€ {res_y2['tax_cpb_base']:,.2f}</b><br>
-            • Quota Incrementale Flat Tax ({substitute_rate}% su € {res_y2['incremento_cpb']:,.2f}):<br>
+            • Quota Incrementale Flat Tax (Reddito CPB - Reddito Base):<br>
             &nbsp;&nbsp;&nbsp;&nbsp;€ {res_y2['incremento_cpb']:,.2f} × {substitute_rate}% = <b>€ {res_y2['tax_cpb_flat']:,.2f}</b><br>
             • <b>Totale Tasse CPB {year_cpb2}:</b> € {res_y2['tax_cpb_base']:,.2f} + € {res_y2['tax_cpb_flat']:,.2f} = <b>€ {res_y2['tax_cpb_total']:,.2f}</b>
             <hr style="margin:8px 0;">
@@ -1170,9 +1180,8 @@ def generate_pdf_report(
     story.append(t_config)
     story.append(Spacer(1, 8))
 
-    # --- SEZIONE DETTAGLIO IRPEF PER SOCIO / TITOLARE ---
     if dettaglio_irpef_soci:
-        story.append(Paragraph("1.bis DETTAGLIO IRPEF PER SCAGLIONI (SOCI / TITOLARE) - AL NETTO DI ONERI E DEDUZIONI", section_heading))
+        story.append(Paragraph("1.bis DETTAGLIO IRPEF (AL NETTO DI DEDUZIONI) PER CALCOLO ALIQUOTA MEDIA", section_heading))
         for socio in dettaglio_irpef_soci:
             soggetto_txt = socio['soggetto']
 
@@ -1195,7 +1204,6 @@ def generate_pdf_report(
             socio_block.append(Paragraph(f"<b>{soggetto_txt}</b>", box_title_style))
             socio_block.append(HRFlowable(width="100%", thickness=0.5, color=PRIMARY_COLOR, spaceAfter=4))
             
-            # Anno 1
             txt_t1 = f"<b>--- ANNO {year1} ---</b><br/>"
             txt_t1 += f"• Reddito Complessivo (al netto deduzioni): € {t1_r:,.2f} | Aliquota incl. Locali: {t1_al:.2f}% | Imposta Totale: € {t1_imp:,.2f}<br/>"
             for sc in t1_scag:
@@ -1203,7 +1211,6 @@ def generate_pdf_report(
             socio_block.append(Paragraph(txt_t1, body_style))
             socio_block.append(Spacer(1, 3))
             
-            # Anno 2
             txt_t2 = f"<b>--- ANNO {year2} ---</b><br/>"
             txt_t2 += f"• Reddito Complessivo (al netto deduzioni): € {t2_r:,.2f} | Aliquota incl. Locali: {t2_al:.2f}% | Imposta Totale: € {t2_imp:,.2f}<br/>"
             for sc in t2_scag:
@@ -1221,9 +1228,9 @@ def generate_pdf_report(
             story.append(Spacer(1, 6))
         story.append(Spacer(1, 4))
 
-    story.append(Paragraph("2. QUADRO REDDITI PREVISTI E PROPOSTA CONCORDATO", section_heading))
+    story.append(Paragraph("2. REDDITI PREVISTI E PROPOSTA CONCORDATO PREVENTIVO BIENNALE", section_heading))
     
-    redditi_headers = ["Anno / Descrizione", "Reddito Storico Base", "Reddito Atteso Previsto", "Proposta CPB AdE", "Differenza (CPB vs Atteso)"]
+    redditi_headers = ["Annualità", "Reddito Storico Base (P4)", "Reddito Atteso Previsto", "Proposta CPB AdE (P6 e P7)", "Differenza (CPB vs Atteso)"]
     row_y1 = [f"Anno {year1}", f"€ {base_historical:,.2f}", f"€ {exp_y1:,.2f}", f"€ {prop_y1:,.2f}", f"€ {(prop_y1 - exp_y1):,.2f}"]
     row_y2 = [f"Anno {year2}", f"€ {base_historical:,.2f}", f"€ {exp_y2:,.2f}", f"€ {prop_y2:,.2f}", f"€ {(prop_y2 - exp_y2):,.2f}"]
     row_tot = ["TOTALE BIENNIO", f"€ {(base_historical*2):,.2f}", f"€ {tot_exp:,.2f}", f"€ {tot_prop:,.2f}", f"€ {(tot_prop - tot_exp):,.2f}"]
@@ -1268,7 +1275,7 @@ def generate_pdf_report(
     story.append(t_expander)
     story.append(Spacer(1, 10))
 
-    story.append(Paragraph("3. ANALISI MATEMATICA E VALUTAZIONE DI CONVENIENZA", section_heading))
+    story.append(Paragraph("3. ANALISI CALCOLO VALUTAZIONE DI CONVENIENZA", section_heading))
 
     def make_year_box(year, exp_inc, prop_cpb, res_dict, tax_rate, bg_col, border_col):
         content = []
