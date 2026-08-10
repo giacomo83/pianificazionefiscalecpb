@@ -974,11 +974,16 @@ with st.expander("❓ **Come viene calcolata la convenienza fiscale e cos'è il 
 
 def calc_annual_taxes_detailed(income_atteso, prop_cpb, tax_rate_std, flat_tax_rate, base_historical):
     tax_ordinary = income_atteso * (tax_rate_std / 100.0)
-    
-    base_ordinaria_cpb = min(prop_cpb, base_historical)
-    incremento_cpb = max(0.0, prop_cpb - base_historical)
-    
-    tax_cpb_base = base_ordinaria_cpb * (tax_rate_std / 100.0)
+    # MODIFICA: Se il reddito storico base è negativo (minore di zero)
+    if base_historical < 0:
+        base_ordinaria_cpb = 0.0
+        incremento_cpb = max(0.0, prop_cpb)
+        tax_cpb_base = 0.0
+    else:
+        base_ordinaria_cpb = min(prop_cpb, base_historical)
+        incremento_cpb = max(0.0, prop_cpb - base_historical)
+        tax_cpb_base = base_ordinaria_cpb * (tax_rate_std / 100.0)
+        
     tax_cpb_flat = incremento_cpb * (flat_tax_rate / 100.0)
     tax_cpb_total = tax_cpb_base + tax_cpb_flat
     
@@ -1162,7 +1167,7 @@ def generate_pdf_report(
     story.append(Paragraph("Analisi statistica previsionale, valutazione di convenienza economica e simulazione fiscale", subtitle_style))
     story.append(HRFlowable(width="100%", thickness=1, color=PRIMARY_COLOR, spaceAfter=10))
     
-    story.append(Paragraph("1. INQUADRAMENTO SOGGETTO E PARAMETRI FISCALI", section_heading))
+    story.append(Paragraph("1. INQUADRAMENTO SOGGETTO E PARAMETRI FISCALI ADOTTATI", section_heading))
     
     config_data = [
         [Paragraph(f"<b>Contribuente / Ditta:</b> {denominazione}", body_style), Paragraph(f"<b>Codice Fiscale / P.IVA:</b> {piva}", body_style)],
@@ -1275,7 +1280,7 @@ def generate_pdf_report(
     story.append(t_expander)
     story.append(Spacer(1, 10))
 
-    story.append(Paragraph("3. ANALISI CALCOLO VALUTAZIONE DI CONVENIENZA", section_heading))
+    story.append(Paragraph("3. CALCOLO VALUTAZIONE DI CONVENIENZA FISCALE", section_heading))
 
     def make_year_box(year, exp_inc, prop_cpb, res_dict, tax_rate, bg_col, border_col):
         content = []
