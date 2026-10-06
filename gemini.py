@@ -37,7 +37,7 @@ def check_password():
     if "password_correct" not in st.session_state:
         # Primo accesso, mostra i campi di login
         st.markdown('<div class="main-header">🔒 Accesso Riservato</div>', unsafe_allow_html=True)
-        st.markdown('<div class="sub-header">Inserisci le credenziali fornite da ZSICILIA SRL per accedere al tool di pianificazione fiscale CBP.</div>', unsafe_allow_html=True)
+        st.markdown('<div class="sub-header">Inserisci le credenziali per accedere al tool di pianificazione fiscale CBP.</div>', unsafe_allow_html=True)
         
         st.text_input("Username", key="username")
         st.text_input("Password", type="password", key="password")
